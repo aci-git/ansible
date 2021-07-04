@@ -1,0 +1,18 @@
+#
+# This playbook allows you to install an msi by downloading it and then installing it
+#
+---
+- name: Download and install MSI
+  hosts: windows
+  tasks:
+    - name: Download MSI
+      win_get_url:
+        # Configure url of product
+        url: https://www.7-zip.org/a/7z1900-x64.msi
+        # Folder where the MSI file is downloaded
+        dest: C:\tmp\7z1900-x64.msi
+
+    - name: Install MSI
+      win_package:
+        path: C:\tmp\7z1900-x64.msi
+        state: present
