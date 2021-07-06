@@ -39,32 +39,23 @@
       apt:
         upgrade: yes
 
-    - name: Install Nginx
+    - name: Install Nginx / PHP7.4 / MariaDB 10.5
       apt:
-        name: nginx
-        state: latest
-
-    - name: Install PHP-FPM 7.4
-      apt:
-        name: php7.4-fpm
-        state: latest
-    
-    - name: Install MariaDB 10.5
-      apt:
-        name: mariadb-server-10.5
+        name: 
+        - nginx
+        - php7.4-fpm
+        - mariadb-server-10.5
         state: latest
 
     - name: Nginx change user
       lineinfile:
         path: /etc/nginx/nginx.conf
-        #search_string: user  nginx;
         regex: '^user  nginx;'
         line: user www-data;
 
     - name: Nginx add support vhost like apache
       lineinfile:
         path: /etc/nginx/nginx.conf
-        #regex: '^include /etc/nginx/conf.d/*.conf;'
         insertafter: "include       /etc/nginx/mime.types;"       
         line: 'include /etc/nginx/sites-enabled/*;'
 
@@ -78,10 +69,36 @@
         path: /etc/nginx/sites-enabled
         state: directory
 
+    - name: Check if default conf exist if replay playbook
+      stat:
+        path: /etc/nginx/conf.d/default.conf
+      register: defaultconf
+
     - name: Move default vhost in sites-avaible
       ansible.builtin.copy:
         remote_src: yes
         src: /etc/nginx/conf.d/default.conf
         dest: /etc/nginx/sites-available/default.conf
-        
+      when: defaultconf.stat.exists
 
+    - name: Remove default conf form conf.d
+      ansible.builtin.file:
+        path: /etc/nginx/conf.d/default.conf
+        state: absent
+
+    - name: Enable default conf with symlink
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/default.conf
+        dest: /etc/nginx/sites-enabled/default.conf
+        state: link
+
+    - name: Enable PHP for default virtualhost 1/
+      lineinfile:
+        path: /etc/nginx/sites-available/default.conf
+        regex: '^root           html;'
+        line: root /usr/share/nginx/html;
+    - name: Enable PHP for default virtualhost 2/
+      lineinfile:
+        path: /etc/nginx/sites-available/default.conf
+        regex: '^fastcgi_pass   127.0.0.1:9000;'
+        line: fastcgi_pass unix:/run/php/php7.3-fpm.sock;
