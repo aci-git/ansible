@@ -1,0 +1,104 @@
+#
+# Playbook for install Nginx, PHP, MariaDB
+#
+---
+- name: Install Stack Nginx, PHP, MariaDB
+  hosts: ubuntu
+  become: yes
+  become_method: sudo
+  tasks:
+    - name: Add repository PPA Ondre PHP
+      apt_repository:
+        repo: 'ppa:ondrej/php'
+
+    - name: Add key nginx repository
+      apt_key:
+        url: http://nginx.org/keys/nginx_signing.key
+        state: present
+
+    - name: Add Nginx repository
+      apt_repository:
+        repo: 'deb http://nginx.org/packages/mainline/ubuntu/ bionic nginx'
+        state: present
+        filename: nginx
+        update_cache: yes
+
+    - name: Add key MartiaDB repository
+      apt_key:
+        url: https://mariadb.org/mariadb_release_signing_key.asc
+        state: present
+
+    - name: Add MariaDB repository
+      apt_repository:
+        repo: 'deb http://mirror.23media.de/mariadb/repo/10.5/ubuntu focal main'
+        state: present
+        filename: mariadb105
+        update_cache: yes
+
+    - name: Install Update
+      apt:
+        upgrade: yes
+
+    - name: Install Nginx / PHP7.4 / MariaDB 10.5
+      apt:
+        name: 
+        - nginx
+        - php7.4-fpm
+        - mariadb-server-10.5
+        state: latest
+
+    - name: Nginx change user
+      lineinfile:
+        path: /etc/nginx/nginx.conf
+        regex: '^user  nginx;'
+        line: user www-data;
+
+    - name: Nginx add support vhost like apache
+      lineinfile:
+        path: /etc/nginx/nginx.conf
+        insertafter: "include       /etc/nginx/mime.types;"       
+        line: 'include /etc/nginx/sites-enabled/*;'
+
+    - name: Create folder sites-available
+      ansible.builtin.file:
+        path: /etc/nginx/sites-available
+        state: directory
+
+    - name: Create folder sites-enables
+      ansible.builtin.file:
+        path: /etc/nginx/sites-enabled
+        state: directory
+
+    - name: Check if default conf exist if replay playbook
+      stat:
+        path: /etc/nginx/conf.d/default.conf
+      register: defaultconf
+
+    - name: Move default vhost in sites-avaible
+      ansible.builtin.copy:
+        remote_src: yes
+        src: /etc/nginx/conf.d/default.conf
+        dest: /etc/nginx/sites-available/default.conf
+      when: defaultconf.stat.exists
+
+    - name: Remove default conf form conf.d
+      ansible.builtin.file:
+        path: /etc/nginx/conf.d/default.conf
+        state: absent
+
+    - name: Enable default conf with symlink
+      ansible.builtin.file:
+        src: /etc/nginx/sites-available/default.conf
+        dest: /etc/nginx/sites-enabled/default.conf
+        state: link
+
+    - name: Enable PHP for default virtualhost 1/
+      lineinfile:
+        path: /etc/nginx/sites-available/default.conf
+        regex: '^root           html;'
+        line: root /usr/share/nginx/html;
+    - name: Enable PHP for default virtualhost 2/
+      lineinfile:
+        path: /etc/nginx/sites-available/default.conf
+        regex: '^fastcgi_pass   127.0.0.1:9000;'
+        line: fastcgi_pass unix:/run/php/php7.3-fpm.sock;
