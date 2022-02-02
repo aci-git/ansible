@@ -1,0 +1,6 @@
+---
+- name: Disable SMBv1
+  hosts: windows, windows_test_ad
+  ansible.windows.win_powershell:
+    script: |
+      Set-SmbServerConfiguration -EnableSMB1Protocol $false -Force
