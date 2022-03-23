@@ -1,6 +1,8 @@
 ---
-- name: Disable SMBv1
-  hosts: windows, windows_test_ad
-  ansible.windows.win_powershell:
-    script: |
-      Set-SmbServerConfiguration -EnableSMB1Protocol $false -Force
+  - name: Windows Update
+    hosts: windows,windows_test_ad
+    tasks:
+      - name: Install all update
+        ansible.windows.win_powershell:
+          script: |
+            Set-SmbServerConfiguration -EnableSMB1Protocol $false -Force
