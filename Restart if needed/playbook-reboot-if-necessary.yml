@@ -1,0 +1,13 @@
+---
+- name: Windows Reboot if needed
+  hosts: all
+  tasks:
+    - name: Check if reboot is required
+      ansible.windows.win_reg_stat:
+        path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update
+      register: reboot_required
+
+    #- name: Reboot
+    #  ansible.windows.win_reboot:
+    #    msg: Reboot by Ansible
+    #    reboot_timeout: 600
