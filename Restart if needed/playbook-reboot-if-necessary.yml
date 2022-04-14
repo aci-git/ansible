@@ -5,6 +5,7 @@
     - name: Check if reboot is required
       ansible.windows.win_reg_stat:
         path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update
+        name: RebootRequired
       register: reboot_required
 
     #- name: Reboot
