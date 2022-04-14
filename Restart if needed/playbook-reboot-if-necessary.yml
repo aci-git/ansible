@@ -8,7 +8,12 @@
         name: RebootRequiredSince
       register: reboot_required
 
+    - name: Debug Message
+      ansible.builtin.debug:
+        msg: Reboot is required for host
+      when: reboot_required.exists == true
     #- name: Reboot
     #  ansible.windows.win_reboot:
     #    msg: Reboot by Ansible
     #    reboot_timeout: 600
+    #
