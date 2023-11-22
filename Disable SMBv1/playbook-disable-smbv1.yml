@@ -1,8 +1,0 @@
----
-  - name: Windows Update
-    hosts: all
-    tasks:
-      - name: Disable SMBv1 For Windows 2012/2016
-        ansible.windows.win_powershell:
-          script: |
-            Set-SmbServerConfiguration -EnableSMB1Protocol $false -Force
