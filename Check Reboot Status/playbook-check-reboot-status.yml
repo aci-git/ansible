@@ -11,4 +11,4 @@
     - name: Debug Message
       ansible.builtin.debug:
         msg: Reboot is required for host
-      when: reboot_required.exists == true
+      when: reboot_required.exists == true     
