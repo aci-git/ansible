@@ -4,12 +4,24 @@
 
     - name: Check pending reboot
       win_shell: |
-        $key = r'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion'
-        $pending = Test-Path $key
+        $keys = @(
+          r'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending',
+          r'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired',  
+          r'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\PendingFileRenameOperations'
+        )
+        
+        $pending = $false
+        foreach ($key in $keys) {
+          if (Test-Path $key) {
+            $pending = $true
+            break
+          } 
+        }
+        
         $output = "Reboot Pending: $pending"
         Write-Output $output
       register: reboot_result
-
+      
     - debug:
         var: reboot_result
 
