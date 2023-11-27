@@ -1,32 +1,33 @@
 - hosts: all
-
+  
   tasks:
-    
-    - name: Check for pending reboot  
-      win_shell: |
+
+    - name: Check for pending reboot
+      win_shell: |  
         $pendingReboot = Invoke-Command -ScriptBlock {
             $pendingRegistryKeys = @(
-                r'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending', 
-                r'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired',
+                r'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending',
+                r'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired', 
                 r'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\PendingFileRenameOperations'
             )
 
             foreach ($registryKey in $pendingRegistryKeys) {
-              if (Test-Path $registryKey) {
-                  return $true
-              }
+                if (Test-Path $registryKey) {
+                    return $true 
+                }
             }
-           return $false
-        }
-        
-        $output = "Reboot Pending: $pendingReboot"
-        Write-Output $output
-    
-      register: reboot_result
 
-    - debug:  
+            return $false
+        }
+
+        $output = "Reboot Pending: $pendingReboot"  
+        Write-Output $output
+
+      register: reboot_result
+    
+    - debug:
         var: reboot_result
-        
+
     - name: Output reboot status
       debug:
         msg: "{{ reboot_result.stdout }}"
