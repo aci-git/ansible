@@ -1,4 +1,4 @@
 # Ansible Windows Playbooks
 
 
-Automatic playbook Ansible for Windows
+Ansible playbooks for Windows computers.
