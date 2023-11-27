@@ -1,0 +1,8 @@
+---
+- name: Windows Reboot
+  hosts: windows
+  tasks:
+    - name: Reboot
+      ansible.windows.win_reboot:
+        msg: Reboot by Ansible
+        reboot_timeout: 600
