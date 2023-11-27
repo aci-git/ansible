@@ -1,18 +1,18 @@
 - hosts: all
-  
+
   tasks:
 
     - name: Check pending reboot
-      win_shell: | 
-        $key = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\'
+      win_shell: |
+        $key = r'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion'
         $pending = Test-Path $key
-        $output = "Reboot pending: $pending"
+        $output = "Reboot Pending: $pending"
         Write-Output $output
       register: reboot_result
-    
+
     - debug:
         var: reboot_result
-        
-    - name: Output reboot status  
-      debug:
+
+    - name: Output reboot status
+      debug:  
         msg: "{{ reboot_result.stdout }}"
