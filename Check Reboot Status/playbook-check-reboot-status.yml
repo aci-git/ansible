@@ -1,15 +1,32 @@
 - hosts: all
 
   tasks:
-    - name: Check if reboot is pending
-      win_shell: "(Get-CimInstance -ClassName Win32_OperatingSystem).RebootRequired"
+    - name: Check pending reboot
+      win_shell: |
+        $pendingReboot = Invoke-Command -Session $session -ScriptBlock {
+          $pendingRegistryKeys = @(
+            "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Component Based Servicing\\RebootPending",
+            "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WindowsUpdate\\Auto Update\\RebootRequired", 
+            "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\PendingFileRenameOperations"
+          )
+        
+          foreach ($registryKey in $pendingRegistryKeys) {
+            if (Test-Path $registryKey) {
+                return $true
+            }
+          }
+        
+          return $false
+        }
+        
+        Write-Output $pendingReboot
       register: reboot_pending_result
 
-    - name: Output reboot status
+    - name: Output reboot status  
       debug:
         msg: >
           {% if reboot_pending_result.stdout is defined and reboot_pending_result.stdout == 'True' -%}
             Reboot pending
-          {%- else -%}  
+          {%- else -%}
             No reboot needed
           {%- endif %}
