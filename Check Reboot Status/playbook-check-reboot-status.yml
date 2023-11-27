@@ -7,4 +7,9 @@
 
     - name: Output reboot status
       debug:
-        msg: "Reboot pending: {{ reboot_pending_result.stdout_lines[0] == 'True' }}"
+        msg: >
+          {% if reboot_pending_result.stdout is defined and reboot_pending_result.stdout == 'True' -%}
+            Reboot pending
+          {%- else -%}  
+            No reboot needed
+          {%- endif %}
