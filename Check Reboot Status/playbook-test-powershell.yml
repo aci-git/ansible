@@ -1,0 +1,24 @@
+- hosts: windows_servers
+
+  tasks:
+
+    - name: Check basic PS messaging  
+      win_shell: |  
+        $test = "Hello from PS!"
+        Write-Output $test
+      register: test_result
+
+    - name: Output test message
+      debug:
+        var: test_result.stdout
+
+    - name: Check pending reboot   
+      win_shell: |  
+        $pending = Test-Path "HKLM:\SOFTWARE\..."
+        $output = "Reboot pending: $pending" 
+        Write-Output $output
+     register: reboot_result
+
+    - name: Output reboot status
+      debug: 
+        var: reboot_result.stdout
