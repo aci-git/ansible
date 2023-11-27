@@ -1,12 +1,12 @@
----
 - hosts: all
   gather_facts: no
 
   tasks:
     - name: Check for pending reboot
       win_reboot:
-        reboot_required_var: pending_reboot_required
+        test_command: "(Get-CimInstance -ClassName Win32_OperatingSystem).RebootRequired" 
+      register: reboot_status
 
-    - name: Output reboot status  
+    - name: Output reboot status
       debug:
-        msg: "Reboot pending: {{ pending_reboot_required }}"
+        msg: "Reboot pending: {{ reboot_status.reboot_required }}"
