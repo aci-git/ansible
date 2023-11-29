@@ -1,57 +1,74 @@
-- hosts: 2016-TEST.affordablecare.com
-
+---
+- name: Upgrade Windows Server
+  hosts: 2016-TEST.affordablecare.com
   vars:
-    iso_path: E:\sources\install.iso 
+    iso_path: E:\sources\install.iso
     edition_map:
       ServerStandard: ServerStandard-Eval    
-      ServerDatacenter:  ServerDatacenter-Eval
+      ServerDatacenter: ServerDatacenter-Eval
     dvd_drive_letter: D
-
+  
   tasks:
-    - name: Mount ISO   
-      win_disk_image:
-        image_path: "{{ iso_path }}"
-        state: present
+
+    - name: Get facts
+      win_gather_facts:
 
     - name: Get current edition
-      win_get_fact: 
-        fact_names:  
-          - edition
+      win_product_facts:
       register: current_edition
 
     - name: Set upgrade edition
       set_fact:
-        upgrade_edition: "{{ edition_map[current_edition.ansible_facts.edition] }}"
+        upgrade_edition: "{{ edition_map[current_edition.products[0].product_name] }}"
 
-    - name: Perform in-place upgrade
-      win_feature:
-        name: "{{ upgrade_edition }}" 
-        state: present
-        include_management_tools: yes
-        source: "{{ dvd_drive_letter }}:\""
-      async: 36000  
-      poll: 30
+    - block:
 
-    - name: Check for updates
-      win_updates:
-        category_names: 
-          - CriticalUpdates
-          - SecurityUpdates
-          - UpdateRollups  
-        state: searched
+        - name: Mount ISO
+          win_disk_image:
+            image_path: "{{ iso_path }}"
+            state: present
+        
+        - name: Perform upgrade
+          win_feature:
+            name: "{{ upgrade_edition }}"
+            state: present
+            source: "{{ dvd_drive_letter }}:"
+  
+      rescue:
 
-    - name: Install updates
-      win_updates:
-        category_names:  
-          - CriticalUpdates
-          - SecurityUpdates
-          - UpdateRollups 
-        state: installed
-      register: update_result  
-      until: not update_result.reboot_required
-      retries: 5
-      delay: 10
-      
-    - name: Reboot server if required
-      win_reboot:   
-      when: update_result.reboot_required
+        - name: Handle failures
+          debug:
+            msg: "Upgrade failed"
+  
+      always:
+
+        - name: Unmount ISO
+          win_disk_image:
+            image_path: "{{ iso_path }}"
+            state: absent
+
+    - block:
+  
+        - name: Check for updates
+          win_updates:
+            state: searched
+        
+        - name: Install updates
+          win_updates:
+            category_names:
+              - CriticalUpdates
+              - SecurityUpdates
+            state: installed
+          register: update_result
+          until: not update_result.reboot_required
+          retries: 5
+          delay: 10
+          
+      tags: patch
+
+    - name: Verify upgrade success
+      win_command: ver
+
+    - name: Reboot server
+      win_reboot:
+      when: ver.rc != 0
