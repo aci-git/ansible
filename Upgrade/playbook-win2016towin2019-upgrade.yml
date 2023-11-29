@@ -1,72 +1,51 @@
 ---
-- name: Upgrade Windows Server
+- name: Upgrade Windows Server  
   hosts: 2016-TEST.affordablecare.com
   vars:
-    iso_path: E:\sources\install.iso
+    iso_path: E:\sources\install.iso  
     edition_map:
-      ServerStandard: ServerStandard-Eval    
+      ServerStandard: ServerStandard-Eval     
       ServerDatacenter: ServerDatacenter-Eval
     dvd_drive_letter: D
-  
+
   tasks:
 
     - name: Get facts
       win_gather_facts:
 
-    - name: Get current edition
+    - name: Get current edition  
       win_product_facts:
       register: current_edition
 
     - name: Set upgrade edition
-      set_fact:
+      set_fact: 
         upgrade_edition: "{{ edition_map[current_edition.products[0].product_name] }}"
 
-    - block:
-
-        - name: Mount ISO
-          win_disk_image:
-            image_path: "{{ iso_path }}"
-            state: present
-        
-        - name: Perform upgrade
-          win_feature:
-            name: "{{ upgrade_edition }}"
-            state: present
-            source: "{{ dvd_drive_letter }}:"
-  
-      rescue:
-
-        - name: Handle failures
-          debug:
-            msg: "Upgrade failed"
-  
-      always:
-
-        - name: Unmount ISO
-          win_disk_image:
-            image_path: "{{ iso_path }}"
-            state: absent
-
-    - block:
-  
+    - name: Perform upgrade
+      win_feature:
+        name: "{{ upgrade_edition }}"
+        state: present
+        source: "{{ dvd_drive_letter }}:"
+    
+    - block:  
         - name: Check for updates
-          win_updates:
+          win_updates: 
             state: searched
         
         - name: Install updates
           win_updates:
-            category_names:
+            category_names: 
               - CriticalUpdates
               - SecurityUpdates
             state: installed
-          register: update_result
+          register: update_result  
           until: not update_result.reboot_required
           retries: 5
           delay: 10
-          
+              
       tags: patch
 
-    - name: Verify upgrade success
+    - name: Verify upgrade success  
       win_command: ver
 
     - name: Reboot server
