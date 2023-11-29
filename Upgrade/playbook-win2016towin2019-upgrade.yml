@@ -1,4 +1,4 @@
-- hosts: 10.20.10.223
+- hosts: 2016-TEST.affordablecare.com
 
   vars:
     iso_path: E:\sources\install.iso 
