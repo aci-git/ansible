@@ -1,36 +1,38 @@
 ---
-- hosts: 2016-test.affordablecare.com 
+- hosts: 2016-test.affordablecare.com
   gather_facts: no
+
+  collections:
+    - ansible.windows
   
   tasks:
 
-    - name: Check if AutoPilot module loaded
-      win_command: Get-Module AutoPilotUpgrade
+    - name: Check if AutoPilot module loaded  
+      ansible.windows.win_command: Get-Module AutoPilotUpgrade
       register: module_check
 
     - name: Import AutoPilotUpgrade module
-      win_psmodule:
+      ansible.windows.win_psmodule:
         name: AutoPilotUpgrade
         state: present
       when: module_check.rc != 0
 
-    - name: Set up upgrade task
-      win_command: Save-AutoPilotUpgradeTask -Group 2 -PurgeExcessUpdates -DynamicUpdate Disabled
+    - name: Set up upgrade task    
+      ansible.windows.win_command: Save-AutoPilotUpgradeTask -Group 2 -PurgeExcessUpdates -DynamicUpdate Disabled
 
-    - name: Perform upgrade to 2019  
-      win_command: Start-AutoPilotUpgradeTask
-
-    - name: Await completion  
-      win_command: Get-AutoPilotUpgradeTaskInfo
+    - name: Perform upgrade to 2019
+      ansible.windows.win_command: Start-AutoPilotUpgradeTask
+    
+    - name: Await completion
+      ansible.windows.win_command: Get-AutoPilotUpgradeTaskInfo  
       register: result
       until: result.stdout.Contains("The upgrade completed successfully")
       retries: 500
       delay: 30
       
     - name: Reboot server
-      win_reboot:
+      ansible.windows.win_reboot:
       
-  handlers:
-    
+  handlers:  
     - name: reset connection
       meta: reset_connection
