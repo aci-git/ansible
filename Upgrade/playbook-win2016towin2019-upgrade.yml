@@ -28,7 +28,7 @@
         name: "{{ upgrade_edition }}" 
         state: present
         include_management_tools: yes
-        source: "{{ dvd_drive_letter }}:\"
+        source: "{{ dvd_drive_letter }}:\""
       async: 36000  
       poll: 30
 
