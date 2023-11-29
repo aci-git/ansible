@@ -1,7 +1,7 @@
 - hosts: 2016-TEST.affordablecare.com
 
   vars:
-    #iso_path: E:\sources\install.iso 
+    iso_path: E:\sources\install.iso 
     edition_map:
       ServerStandard: ServerStandard-Eval    
       ServerDatacenter:  ServerDatacenter-Eval
