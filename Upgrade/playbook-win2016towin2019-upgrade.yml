@@ -1,4 +1,4 @@
-- hosts: RDC-DTXTemp-01.affordablecare.com 
+- hosts: 10.10.4.183
 
   vars:
     iso_path: E:\sources\install.iso 
