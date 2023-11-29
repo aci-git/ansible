@@ -1,31 +1,38 @@
+# Install collection 
+ansible-galaxy collection install community.windows
+
 ---
 - hosts: 2016-test.affordablecare.com
-  
+
   collections:
     - community.windows
-  
+    
   tasks:
 
     - name: Get full inventory facts
       community.windows.win_inventory:
       register: inventory_facts
 
-    - name: Display OS facts   
+    - name: Display OS facts
       debug:
         var: inventory_facts.os
 
-    - name: Check for AutoPilot module
+    - name: Check for AutoPilot  
       community.windows.win_stat:
         path: $env:ProgramFiles\WindowsPowerShell\Modules\AutoPilotUpgrade\AutoPilotUpgrade.psm1
       register: module_check
 
-    - name: Import AutoPilotUpgrade  
+    - name: Import AutoPilotUpgrade
       community.windows.win_psmodule:
-        name: AutoPilotUpgrade 
+        name: AutoPilotUpgrade
         state: present
       when: not module_check.stat.exists
-    
-    # Other tasks...
 
+    - name: Set up upgrade task   
+      community.windows.win_command: Save-AutoPilotUpgradeTask -DynamicUpdate Disabled
+    
+    - name: Perform upgrade
+      community.windows.win_command: Start-AutoPilotUpgradeTask
+    
     - name: Reboot server
       community.windows.win_reboot:
