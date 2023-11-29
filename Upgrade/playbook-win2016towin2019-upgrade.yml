@@ -1,0 +1,42 @@
+- hosts: windows2k16.example.com
+  vars: 
+    iso_path: E:\sources\install.iso
+
+  tasks:
+    - name: Mount ISO
+      win_disk_image: 
+        image_path: "{{ iso_path }}"
+        state: present
+
+    - name: Perform in-place upgrade to Windows Server 2019 
+      win_feature:
+        name: Server-Standard-Eval
+        state: present
+        include_management_tools: yes 
+        source: "{{ iso_path }}"
+      async: 36000  
+      poll: 30
+
+    - name: Check for updates    
+      win_updates:
+        category_names:  
+          - CriticalUpdates
+          - SecurityUpdates
+          - UpdateRollups
+        state: searched 
+
+    - name: Install updates
+      win_updates:
+        category_names:
+          - CriticalUpdates
+          - SecurityUpdates  
+          - UpdateRollups
+        state: installed
+      register: update_result
+      until: not update_result.reboot_required
+      retries: 5
+      delay: 10
+
+    - name: Reboot server if required
+      win_reboot:
+      when: update_result.reboot_required
