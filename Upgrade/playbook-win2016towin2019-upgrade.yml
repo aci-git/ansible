@@ -1,38 +1,31 @@
 ---
 - hosts: 2016-test.affordablecare.com
-  gather_facts: no
-
+  
   collections:
-    - ansible.windows
+    - community.windows
   
   tasks:
 
-    - name: Check if AutoPilot module loaded  
-      ansible.windows.win_command: Get-Module AutoPilotUpgrade
+    - name: Get full inventory facts
+      community.windows.win_inventory:
+      register: inventory_facts
+
+    - name: Display OS facts   
+      debug:
+        var: inventory_facts.os
+
+    - name: Check for AutoPilot module
+      community.windows.win_stat:
+        path: $env:ProgramFiles\WindowsPowerShell\Modules\AutoPilotUpgrade\AutoPilotUpgrade.psm1
       register: module_check
 
-    - name: Import AutoPilotUpgrade module
-      ansible.windows.win_psmodule:
-        name: AutoPilotUpgrade
+    - name: Import AutoPilotUpgrade  
+      community.windows.win_psmodule:
+        name: AutoPilotUpgrade 
         state: present
-      when: module_check.rc != 0
-
-    - name: Set up upgrade task    
-      ansible.windows.win_command: Save-AutoPilotUpgradeTask -Group 2 -PurgeExcessUpdates -DynamicUpdate Disabled
-
-    - name: Perform upgrade to 2019
-      ansible.windows.win_command: Start-AutoPilotUpgradeTask
+      when: not module_check.stat.exists
     
-    - name: Await completion
-      ansible.windows.win_command: Get-AutoPilotUpgradeTaskInfo  
-      register: result
-      until: result.stdout.Contains("The upgrade completed successfully")
-      retries: 500
-      delay: 30
-      
+    # Other tasks...
+
     - name: Reboot server
-      ansible.windows.win_reboot:
-      
-  handlers:  
-    - name: reset connection
-      meta: reset_connection
+      community.windows.win_reboot:
