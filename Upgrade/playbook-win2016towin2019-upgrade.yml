@@ -1,4 +1,3 @@
-# Install collection 
 ansible-galaxy collection install community.windows
 
 ---
