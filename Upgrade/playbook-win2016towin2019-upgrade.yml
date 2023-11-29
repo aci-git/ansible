@@ -1,55 +1,36 @@
 ---
-- name: Upgrade Windows Server
-  hosts: 2016-TEST.affordablecare.com
-
-  vars:
-    setup_exe_path: E:\sources\setup.exe
-    edition_map:
-      ServerStandard: ServerStandard-Eval
-      ServerDatacenter: ServerDatacenter-Eval
-
+- hosts: 2016-test.affordablecare.com 
+  gather_facts: no
+  
   tasks:
 
-    - name: Get facts
-      win_gather_facts:
+    - name: Check if AutoPilot module loaded
+      win_command: Get-Module AutoPilotUpgrade
+      register: module_check
 
-    - name: Get current edition
-      win_product_facts:
-      register: current_edition
+    - name: Import AutoPilotUpgrade module
+      win_psmodule:
+        name: AutoPilotUpgrade
+        state: present
+      when: module_check.rc != 0
 
-    - name: Set upgrade edition
-      set_fact:
-        upgrade_edition: "{{ edition_map[current_edition.products[0].product_name] }}"
+    - name: Set up upgrade task
+      win_command: Save-AutoPilotUpgradeTask -Group 2 -PurgeExcessUpdates -DynamicUpdate Disabled
 
-    - name: Set upgrade command  
-      set_fact:
-        upgrade_cmd: "{{ setup_exe_path }} /upgrade {{ upgrade_edition }} /passive"
+    - name: Perform upgrade to 2019  
+      win_command: Start-AutoPilotUpgradeTask
 
-    - name: Perform upgrade
-      win_command: "{{ upgrade_cmd }}"
-
-    - block:
-
-        - name: Check for updates
-          win_updates:
-            state: searched
-        
-        - name: Install updates
-          win_updates:
-            category_names:
-              - CriticalUpdates
-              - SecurityUpdates
-            state: installed
-          register: update_result
-          until: not update_result.reboot_required  
-          retries: 5
-          delay: 10
-          
-      tags: patch
-
-    - name: Verify upgrade success
-      win_command: ver
-
+    - name: Await completion  
+      win_command: Get-AutoPilotUpgradeTaskInfo
+      register: result
+      until: result.stdout.Contains("The upgrade completed successfully")
+      retries: 500
+      delay: 30
+      
     - name: Reboot server
       win_reboot:
-      when: ver.rc != 0
+      
+  handlers:
+    
+    - name: reset connection
+      meta: reset_connection
