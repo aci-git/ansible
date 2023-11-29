@@ -1,4 +1,4 @@
-- hosts: 10.10.4.183
+- hosts: 10.20.10.223
 
   vars:
     iso_path: E:\sources\install.iso 
