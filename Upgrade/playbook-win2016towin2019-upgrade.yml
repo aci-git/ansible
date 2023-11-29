@@ -1,57 +1,39 @@
-- hosts: RDC-DTXTemp-01.affordablecare.com
+- hosts: RDC-DTXTemp-01.affordablecare.com 
 
-  vars:
+  vars: 
     iso_path: E:\sources\install.iso
-    edition_map:
-      ServerStandard: ServerStandard-Eval   
+    edition_map: 
+      ServerStandard: ServerStandard-Eval  
       ServerDatacenter: ServerDatacenter-Eval
     dvd_drive_letter: D
 
-  tasks:
-    - name: Mount ISO  
+  tasks: 
+    - name: Mount ISO   
       win_disk_image:
         image_path: "{{ iso_path }}"
         state: present
 
-    - name: Get current edition
+    - name: Get current edition 
       win_get_fact:
-        fact_names:  
+        fact_names:
           - edition
       register: current_edition
 
-    - name: Set upgrade edition 
+    - name: Set upgrade edition
       set_fact:
         upgrade_edition: "{{ edition_map[current_edition.ansible_facts.edition] }}"
 
-    - name: Perform in-place upgrade
-      win_feature:
+    - name: Perform in-place upgrade 
+      win_feature:  
         name: "{{ upgrade_edition }}"
         state: present
         include_management_tools: yes
-        source: "{{ dvd_drive_letter }}:\"
-      async: 36000 
+        source: "{{ dvd_drive_letter }}:\"   
+      async: 36000
       poll: 30
 
-    - name: Check for updates    
-      win_updates:
-        category_names:
-          - CriticalUpdates
-          - SecurityUpdates
-          - UpdateRollups 
-        state: searched
-
-    - name: Install updates  
-      win_updates:
-        category_names:  
-          - CriticalUpdates
-          - SecurityUpdates 
-          - UpdateRollups
-        state: installed
-      register: update_result
-      until: not update_result.reboot_required
-      retries: 5
-      delay: 10
+    - name: Rest of playbook...  
 
     - name: Reboot server if required
-      win_reboot: 
+      win_reboot:  
       when: update_result.reboot_required
