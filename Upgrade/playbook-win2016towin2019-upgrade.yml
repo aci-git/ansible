@@ -8,11 +8,6 @@
     dvd_drive_letter: D
 
   tasks:
-    - name: Mount ISO   
-      win_disk_image:
-        image_path: "{{ iso_path }}"
-        state: present
-
     - name: Get current edition
       win_get_fact: 
         fact_names:  
