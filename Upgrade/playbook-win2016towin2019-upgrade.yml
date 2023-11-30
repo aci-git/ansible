@@ -1,5 +1,7 @@
+# Install collection 
 ansible-galaxy collection install community.windows
 
+---
 - hosts: 2016-test.affordablecare.com
 
   collections:
