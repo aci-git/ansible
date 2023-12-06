@@ -1,42 +1,14 @@
 ---
-- name: Install Windows updates 
-  hosts: all
-  gather_facts: no
-
-  vars:  
-    update_log: C:\Windows\Temp\ansible-win-updates.log
-    async_dir: C:\Windows\Temp
-
-  tasks:
-    - name: Check for available updates  
-      ansible.windows.win_updates:
-        state: searched
-        log_path: "{{ update_log }}"
-      register: update_list
-
-    - name: Install updates  
-      ansible.windows.win_updates:
-        state: installed
-        log_path: "{{ update_log }}"    
-      async: 7200
-      poll: 0  
-      register: win_update
-
-    - name: Wait for install to complete
-      async_status: 
-        jid: "{{ win_update.ansible_job_id }}"
-      register: job_result
-      until: job_result.finished
-      retries: 300
-
-    - name: Output update result  
-      debug:
-        var: win_update
-
-    - name: List installed updates
-      ansible.windows.win_shell: Get-Content {{ update_log }}
-      register: updates_list
-
-    - name: Print installed updates
-      debug:
-        var: updates_list.stdout_lines
+  - name: Windows Update
+    hosts: all
+    tasks:
+      - name: Install all update
+        ansible.windows.win_updates:
+          category_names:
+            - SecurityUpdates
+            - CriticalUpdates
+            - Update Rollups
+            - Updates
+            - Application
+            - Definition Updates
+          log_path: C:\ansible_wu.txt 
