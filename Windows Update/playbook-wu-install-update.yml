@@ -1,32 +1,42 @@
 ---
-- hosts: rdc-dev-01.affordablecare.com
+- name: Install Windows updates 
+  hosts: rdc-dev-01.affordablecare.com
   gather_facts: no
-  
-  vars:
-    update_log: C:\Windows\Temp\ansible-win-updates.log 
+
+  vars:  
+    update_log: C:\Windows\Temp\ansible-win-updates.log
     async_dir: C:\Windows\Temp
 
   tasks:
-    - name: Check for Windows updates  
-      win_updates:
+    - name: Check for available updates  
+      ansible.windows.win_updates:
         state: searched
         log_path: "{{ update_log }}"
       register: update_list
 
-    - name: Install Windows updates
-      win_updates:
+    - name: Install updates  
+      ansible.windows.win_updates:
         state: installed
-        log_path: "{{ update_log }}"
+        log_path: "{{ update_log }}"    
       async: 7200
-      poll: 60
+      poll: 0  
       register: win_update
 
-    - name: Wait for update install to complete
-     async_status:
-       jid: "{{ win_update.ansible_job_id }}"
-     register: job_result
-     until: job_result.finished
-     retries: 300
+    - name: Wait for install to complete
+      async_status: 
+        jid: "{{ win_update.ansible_job_id }}"
+      register: job_result
+      until: job_result.finished
+      retries: 300
 
-    - debug:  
+    - name: Output update result  
+      debug:
         var: win_update
+
+    - name: List installed updates
+      ansible.windows.win_shell: Get-Content {{ update_log }}
+      register: updates_list
+
+    - name: Print installed updates
+      debug:
+        var: updates_list.stdout_lines
