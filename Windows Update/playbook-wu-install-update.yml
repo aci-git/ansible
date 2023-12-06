@@ -1,6 +1,6 @@
 ---
 - name: Install Windows updates 
-  hosts: rdc-dev-01.affordablecare.com
+  hosts: all
   gather_facts: no
 
   vars:  
