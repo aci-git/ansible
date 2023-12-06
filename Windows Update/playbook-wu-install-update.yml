@@ -16,6 +16,7 @@
       async: 7200  
       poll: 60
       register: win_update
+      async_dir: C:\Windows\Temp
 
     - name: Wait for Updates to Complete
       async_status:
