@@ -1,14 +1,32 @@
 ---
-  - name: Windows Update
-    hosts: all
-    tasks:
-      - name: Install all update
-        ansible.windows.win_updates:
-          category_names:
-            - SecurityUpdates
+- hosts: windows
+  gather_facts: no
+
+  tasks:
+    - name: Install Windows Updates
+      ansible.windows.win_updates:
+        category_names:
+         - SecurityUpdates
             - CriticalUpdates
             - Update Rollups
             - Updates
             - Application
             - Definition Updates
-          log_path: C:\ansible_wu.txt 
+        log_path: C:\ansible_wu.log
+      async: 7200  
+      poll: 60
+      register: win_update
+
+    - name: Wait for Updates to Complete
+      async_status:
+        jid: "{{ win_update.ansible_job_id }}"
+      register: job_result
+      until: job_result.finished
+      retries: 300
+
+    - name: Show detailed update result   
+      debug:
+        var: win_update
+
+    - name: Check update logs
+      ansible.windows.win_shell: Get-Content C:\ansible_wu.log
