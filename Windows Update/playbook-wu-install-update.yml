@@ -1,6 +1,5 @@
 ---
-- name: Windows Update
-  hosts: rdc-dev-01.affordablecare.com
+- hosts: rdc-dev-01.affordablecare.com
   gather_facts: no
   
   vars:
