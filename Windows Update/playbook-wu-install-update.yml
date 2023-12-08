@@ -8,27 +8,27 @@
       $tasks = Get-ScheduledTask -TaskName "AnsibleUpdates-*"
       $tasks | Unregister-ScheduledTask -Confirm:$false
 
-  - name: List Updates  
+  - name: List Updates
     ansible.windows.win_updates:
       state: searched
     register: update_list
 
-  - name: Show Updates
+  - name: Show Updates 
     debug:
       var: update_list.updates
-  
+
   - name: Install Updates
-    ansible.windows.win_updates:  
+    ansible.windows.win_updates:
       state: installed
-      reboot: no
+      reboot: no  
       work_directory: C:\Windows\Temp
 
-  - name: Install Additional Updates
+  - name: Install Additional Updates  
     win_updates:
+      tmp_directory: C:\Windows\Temp
       category_names:
         - CriticalUpdates
         - SecurityUpdates
         - UpdateRollups  
-      state: installed 
+      state: installed
       reboot: no
-      tmp_directory: C:\Windows\Temp
