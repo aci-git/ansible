@@ -1,29 +1,28 @@
 ---
 - hosts: all
+
   tasks:
-    - name: List available updates
+    - name: List Updates
       ansible.windows.win_updates:
         state: searched
       register: update_list
 
-    - name: Show updates
-      debug:
+    - name: Show Updates
+      debug: 
         var: update_list.updates
 
     - name: Install Updates
       ansible.windows.win_updates:
         state: installed
         reboot: no
-        log_path: C:\ansible_wu.log
+        tmp_directory: C:\Windows\Temp
 
-    - name: Update installed
+    - name: Install Additional Updates
       win_updates:
         category_names:
-          - CriticalUpdates
-          - DefinitionUpdates
+          - CriticalUpdates 
           - SecurityUpdates
           - UpdateRollups
-          - Updates
         state: installed
         reboot: no
-        log_path: C:\ansible_wu.log
+        tmp_directory: C:\Windows\Temp
