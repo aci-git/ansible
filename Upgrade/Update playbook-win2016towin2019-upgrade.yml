@@ -1,43 +1,24 @@
----
-- hosts: 2016-test.affordablecare.com
-  collections:
-    - community.windows
+# Ansible playbook to run GitHub upgrade script 
 
-  handlers:
-    - name: restart server
-      community.windows.win_reboot:
+- hosts: windows_servers
 
   tasks:
-    - name: Get full inventory facts
-      community.windows.win_inventory:
-        register: inventory_facts
 
-    - name: Set up upgrade task
-      community.windows.win_command: Save-AutoPilotUpgradeTask -DynamicUpdate Disabled
-      args:
-        creates: C:\Windows\Temp\upgrade_task
-      notify: restart server
-      failed_when: false
+    - name: Ensure temp folder exists
+      win_file:
+        path: C:\temp
+        state: directory
 
-    - name: Perform upgrade  
-      community.windows.win_command: Start-AutoPilotUpgradeTask
-      removes: C:\Windows\Temp\upgrade_task
-      notify: restart server
-      failed_when: false
+    - name: Download script from GitHub
+      win_get_url:
+        url: https://raw.githubusercontent.com/myaccount/scripts/main/inplace_upgrade.ps1  
+        dest: C:\temp\inplace_upgrade.ps1
 
-    - name: Reboot server
-      community.windows.win_reboot:
+    - name: Run upgrade script
+      win_powershell: 
+        script: C:\temp\inplace_upgrade.ps1
+      register: upgrade_output
 
-    - name: Wait for machine to come back online
-      wait_for_connection:
-        delay: 30
-        timeout: 300
-
-    - name: Get upgrade results  
-      community.windows.win_command: Get-AutoPilotUpgradeTask
-      register: upgrade_result
-      failed_when: upgrade_result.rc != 0
-
-    - name: Display upgrade results
+    - name: Show output  
       debug:
-        var: upgrade_result
+        var: upgrade_output
