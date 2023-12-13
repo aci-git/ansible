@@ -1,24 +1,25 @@
 ---
 - hosts: 2016-TEST.affordablecare.com
   gather_facts: no
-   
+
   tasks:
 
     - name: Validate temp directory
       win_file:
-        path: \\2016-test\c$\Temp
+        path: \\2016-test\C$\Temp
         state: directory
-
-    - name: Copy source files  
+ 
+    - name: Copy missing files only  
       win_copy:
-        src: \\rdc-dev-01\C$\Temp\2022
-        dest: \\2016-test.affordablecare.com\C$\Temp 
+        src: C:\Temp\2022
+        dest: \\2016-test\C$\Temp
+        remote_src: yes
         force: no
 
     - name: Run Windows setup
-      win_command: \\2016-test.affordablecare.com\C$\Temp\Setup.exe /unattend:\\2016-test.affordablecare.com\C$\Temp\unattend.xml
+      win_command: \\2016-test\C$\Temp\Setup.exe /unattend:\\2016-test\C$\Temp\unattend.xml  
       register: setup_process
 
-    - name: Check setup result 
-      debug:
-       msg: "Setup exit code: {{ setup_process.rc }} "
+    - name: Check setup result
+      debug: 
+        msg: "Setup exit code: {{ setup_process.rc }}"
