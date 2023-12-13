@@ -1,24 +1,24 @@
-# Ansible playbook to run GitHub upgrade script 
-
-- hosts: windows_servers
-
+---
+- hosts: 2016-test
+  gather_facts: no
+   
   tasks:
 
-    - name: Ensure temp folder exists
+    - name: Validate temp directory
       win_file:
-        path: C:\temp
+        path: \\2016-test\c$\Temp
         state: directory
 
-    - name: Download script from GitHub
-      win_get_url:
-        url: https://raw.githubusercontent.com/myaccount/scripts/main/inplace_upgrade.ps1  
-        dest: C:\temp\inplace_upgrade.ps1
+    - name: Copy source files  
+      win_copy:
+        src: \\dc1\C$\Temp\2022
+        dest: \\2016-test\C$\Temp 
+        force: no
 
-    - name: Run upgrade script
-      win_powershell: 
-        script: C:\temp\inplace_upgrade.ps1
-      register: upgrade_output
+    - name: Run Windows setup
+      win_command: \\2016-test\C$\Temp\Setup.exe /unattend:\\2016-test\C$\Temp\unattend.xml
+      register: setup_process
 
-    - name: Show output  
+    - name: Check setup result 
       debug:
-        var: upgrade_output
+       msg: "Setup exit code: {{ setup_process.rc }} "
