@@ -1,5 +1,5 @@
 ---
-- hosts: 2016-test
+- hosts: 2016-test.affordablecare.com
   gather_facts: no
    
   tasks:
@@ -11,12 +11,12 @@
 
     - name: Copy source files  
       win_copy:
-        src: \\dc1\C$\Temp\2022
-        dest: \\2016-test\C$\Temp 
+        src: \\rdc-dev-01\C$\Temp\2022
+        dest: \\2016-test.affordablecare.com\C$\Temp 
         force: no
 
     - name: Run Windows setup
-      win_command: \\2016-test\C$\Temp\Setup.exe /unattend:\\2016-test\C$\Temp\unattend.xml
+      win_command: \\2016-test.affordablecare.com\C$\Temp\Setup.exe /unattend:\\2016-test.affordablecare.com\C$\Temp\unattend.xml
       register: setup_process
 
     - name: Check setup result 
