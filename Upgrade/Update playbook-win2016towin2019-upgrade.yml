@@ -11,7 +11,7 @@
  
     - name: Copy missing files only  
       win_copy:
-        src: \\rdc-dev-01\c$\temp\2022
+        src: \\rdc-dev-01\c$\TEMP\2022
         dest: \\2016-test\C$\Temp
         remote_src: yes
         force: no
