@@ -1,5 +1,5 @@
 ---
-- hosts: servers 
+- hosts: 2016=TEST.affordablecare.com 
   gather_facts: no
 
   tasks:
