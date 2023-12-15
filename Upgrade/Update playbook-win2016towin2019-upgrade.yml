@@ -4,32 +4,32 @@
 
   tasks:
 
-  - name: Run Windows setup asynchronously
-    win_command: C:\Temp\Setup.exe /unattend:C:\Temp\unattend.xml 
+  - name: Run Windows setup asynchronously 
+    win_command: C:\Temp\Setup.exe /unattend:C:\Temp\unattend.xml
     async: 3600
     poll: 0
     register: setup_process
 
-  - name: Wait for winrm reconnect after reboots
+  - name: Wait for winrm reconnect after reboots 
     win_reboot:
     when: setup_process.finished
 
   - name: Check if upgrade completed
     win_command: echo %SetupPhase%
-    register: phase
+    register: phase  
 
   - name: Await upgrade finalize
     async_status:
-    jid: "{{ setup_process.ansible_job_id }}"
-    when: phase.stdout != "specialize" 
-    delay: 30
-    retries: 100
-
+      jid: "{{ setup_process.ansible_job_id}}"
+      when: phase.stdout != "specialize"
+      delay: 30  
+      retries: 100
+      
   post_tasks:  
-  - name: Reboot and ensure upgrade stability 
-    win_reboot:
-    when: phase.stdout == "specialize"   
+  - name: Reboot and ensure upgrade stability
+    win_reboot: 
+    when: phase.stdout == "specialize"
 
-  - name: Gather facts post upgrade
+  - name: Gather facts post upgrade  
     setup:
     when: phase.stdout == "specialize"
