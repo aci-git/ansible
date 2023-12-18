@@ -4,7 +4,8 @@
 
     - name: Run setup.exe from extracted ISO  
       win_command:
-      cmd: C:\Temp\setup.exe /unattend:C:\Temp\unattend.xml
+        chdir: C:\Temp\Sources\Install.wim
+        cmd: C:\Temp\setup.exe /unattend:C:\Temp\unattend.xml
 
     - name: Await reboot
       win_reboot:
