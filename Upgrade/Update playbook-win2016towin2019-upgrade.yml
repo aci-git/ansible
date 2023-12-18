@@ -1,35 +1,26 @@
----
-- hosts: 2016-TEST.affordablecare.com
-  gather_facts: no
+- hosts: 2016-test
 
   tasks:
 
-  - name: Run Windows setup asynchronously 
-    win_command: C:\Temp\Setup.exe /unattend:C:\Temp\unattend.xml
-    async: 3600
-    poll: 0
-    register: setup_process
+    - name: Run setup.exe from extracted ISO  
+      win_command:
+        chdir: C:\Temp\Sources\Install.wim
+        cmd: C:\Temp\setup.exe /unattend:C:\Temp\unattend.xml
 
-  - name: Wait for winrm reconnect after reboots 
-    win_reboot:
-    when: setup_process.finished
+    - name: Await reboot
+      win_reboot:
+      when: ansible_reboot_pending
 
-  - name: Check if upgrade completed
-    win_command: echo %SetupPhase%
-    register: phase  
+    - name: Wait for winrm to reconnect
+      wait_for_connection:
+        delay: 30
+        timeout: 300
 
-  - name: Await upgrade finalize
-    async_status:
-      jid: "{{ setup_process.ansible_job_id}}"
-      when: phase.stdout != "specialize"
-      delay: 30  
-      retries: 100
-      
-  post_tasks:  
-  - name: Reboot and ensure upgrade stability
-    win_reboot: 
-    when: phase.stdout == "specialize"
+    - name: Verify upgrade success
+      win_command: ver
+      register: version
 
-  - name: Gather facts post upgrade  
-    setup:
-    when: phase.stdout == "specialize"
+    - name: Assert upgrade completed
+      assert:
+        that:
+          - version.stdout is match('OS Version.*2022')
