@@ -20,6 +20,3 @@
     - name: Reboot server after upgrade
       win_reboot:
         post_reboot_delay: 60
-
-    - name: Configure server post-upgrade
-      import_tasks: post_upgrade.yml
