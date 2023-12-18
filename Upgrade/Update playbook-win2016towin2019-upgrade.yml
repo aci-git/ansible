@@ -1,24 +1,37 @@
 - hosts: 2016-TEST.affordablecare.com
 
+  vars:
+    setup_log_path: C:\$WINDOWS.~BT\Sources\Panther
+
   tasks:
 
-    - name: Run setup.exe  
+    - name: Run Windows upgrade
       win_command: C:\Temp\setup.exe /unattend:C:\Temp\unattend.xml
-
+      
     - name: Await reboot
       win_reboot:
       when: ansible_reboot_pending
 
-    - name: Wait for winrm to reconnect
-      wait_for_connection:
-        delay: 30
-        timeout: 300
+    - name: Check if upgrade completed
+      win_command: echo %SetupPhase%
+      register: phase
+
+    - name: Tail setup log
+      win_shell: Get-Content -Wait -Path {{ setup_log_path }}\setupact.log
+      register: setup_log
+      until: phase.stdout == "specialize"
+      retries: 100
+      delay: 30
+
+    - name: Reboot on upgrade completion  
+      win_reboot:
+      when: phase.stdout == "specialize"
 
     - name: Verify upgrade success
       win_command: ver
       register: version
 
-    - name: Assert upgrade completed
+    - name: Assert upgrade completed  
       assert:
-        that:
+        that: 
           - version.stdout is match('OS Version.*2022')
