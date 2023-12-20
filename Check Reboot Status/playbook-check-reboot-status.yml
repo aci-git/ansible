@@ -1,31 +1,25 @@
 ---
-- hosts: all  
+- hosts: all
   gather_facts: no
    
   tasks:
 
-    - name: Get last reboot time
-      win_reg_stat:
-        path: HKLM:\System\CurrentControlSet\Control\Windows  
+    - name: Get last boot time
+      win_registry:
+        path: HKLM:\System\CurrentControlSet\Control\Windows
         name: LastBootUpTime
       register: uptime
+            
+    - set_fact:
+        last_rebooted: "{{ uptime.value | int | strftime('%Y-%m-%d %H:%M:%S') }}"
 
-    - name: Set last rebooted time
-      set_fact:
-        last_rebooted: "{{ uptime.data | int | strftime('%Y-%m-%d %H:%M:%S') }}"
-
-    - name: Check registry keys
+    - name: Check PendingFileRenameOperations registry key
       win_reg_stat:
-        path: HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\PendingFileRenameOperations
-        gather_facts: no
+        path: HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\PendingFileRenameOperations 
       register: pending_file_rename
 
-    - name: Print reboot status
-      debug:
-        msg: "System requires reboot"
-      when:
-        - pending_file_rename.exists
-        
-    - name: Print last rebooted time  
+    - name: Print last boot time
       debug:
         var: last_rebooted
+        
+      when: pending_file_rename.exists
