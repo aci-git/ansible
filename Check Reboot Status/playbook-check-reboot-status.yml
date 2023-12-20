@@ -1,24 +1,41 @@
 ---
-- hosts: all
+- hosts: windows
   gather_facts: no
 
   tasks:
+
     - name: Check PendingFileRenameOperations registry key
-      win_reg_stat:
-        path: HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\PendingFileRenameOperations
+      win_registry:
+        path: HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\PendingFileRenameOperations  
       register: pending_file_rename
 
-    - name: Check WindowsUpdate\Auto Update\RebootRequired registry key  
-      win_reg_stat:
+    - name: Check WindowsUpdate/Auto Update/RebootRequired registry key
+      win_registry: 
         path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired
       register: windows_update_reboot_required
 
     - name: Check Component Based Servicing registry key
-      win_reg_stat:
+      win_registry:
         path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending
       register: cbs_reboot_pending
 
+    - name: Get last reboot time
+      win_reboot:
+        get_reboot_time: true
+      register: reboot_time
+
+    - name: Set formatted last reboot time  
+      set_fact:
+        last_rebooted: "{{ reboot_time.lastboottime | strftime('%Y-%m-%d %H:%M:%S') }}"
+
     - name: Print reboot status  
-      debug:
+      debug: 
         msg: "System requires reboot"
-      when: pending_file_rename.exists or windows_update_reboot_required.exists or cbs_reboot_pending.exists
+      when: 
+        - pending_file_rename.data is defined
+        - windows_update_reboot_required.data is defined 
+        - cbs_reboot_pending.data is defined
+
+    - name: Print last reboot time
+      debug:
+        var: last_rebooted
