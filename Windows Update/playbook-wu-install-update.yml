@@ -24,7 +24,6 @@
       
   - name: Install Additional Updates  
     win_updates:
-      tmp_directory: C:\Windows\Temp
       category_names:
         - CriticalUpdates
         - SecurityUpdates
