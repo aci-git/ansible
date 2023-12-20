@@ -3,31 +3,31 @@
   gather_facts: no
 
   tasks:
-  
+
     - name: Check PendingFileRenameOperations registry key
-      win_reg_stat: 
+      win_reg_stat:
         path: HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\PendingFileRenameOperations
       register: pending_file_rename
 
     - name: Check WindowsUpdate registry key
-      win_reg_stat:
-        path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired  
+      win_reg_stat:  
+        path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired
       register: windows_update_reboot_required
 
     - name: Check Component Based Servicing registry key
       win_reg_stat:
-        path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending
+        path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending  
       register: cbs_reboot_pending
 
-    - name: Get last reboot time  
-      win_timezone:
-      register: win_tz
+    - name: Get last reboot time
+      setup:
+      register: output
 
-    - set_fact: 
-        last_rebooted: "{{ win_tz.last_boot | strftime('%Y-%m-%d %H:%M:%S') }}"
+    - set_fact:
+        last_rebooted: "{{ output.ansible_facts.ansible_boot_time }}"
 
-    - name: Print reboot status
-      debug: 
+    - name: Print reboot status  
+      debug:
         msg: "System requires reboot"
       when:
         - pending_file_rename.exists 
@@ -35,5 +35,5 @@
         - cbs_reboot_pending.exists
 
     - name: Print last reboot time
-      debug: 
+      debug:
         var: last_rebooted
