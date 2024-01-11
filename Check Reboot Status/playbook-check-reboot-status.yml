@@ -1,4 +1,7 @@
 ---
+collections:
+  - ansible.windows
+
 - hosts: all
   gather_facts: no
 
@@ -23,9 +26,11 @@
     - name: Send notification with last boot time
       slack:
         msg: System last rebooted on {{ last_rebooted }}
-      when: reboot_required.exists
+      when: 
+        - reboot_required.exists
 
-    - name: Print last boot time
-      debug: 
+    - name: Print last boot time  
+      debug:
         var: last_rebooted
-      when: reboot_required.exists
+      when: 
+        - reboot_required.exists
