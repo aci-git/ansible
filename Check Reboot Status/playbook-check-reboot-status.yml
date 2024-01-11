@@ -1,7 +1,7 @@
 ---
 - hosts: all
   gather_facts: no
-   
+
   tasks:
 
     - name: Get last boot time
@@ -9,17 +9,23 @@
         path: HKLM:\System\CurrentControlSet\Control\Windows
         name: LastBootUpTime
       register: uptime
-            
+      ignore_errors: yes
+
     - set_fact:
         last_rebooted: "{{ uptime.value | int | strftime('%Y-%m-%d %H:%M:%S') }}"
+    
+    - name: Check if reboot is pending
+      win_registry:
+        path: HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing
+        name: RebootRequired
+      register: reboot_required
 
-    - name: Check PendingFileRenameOperations registry key
-      win_reg_stat:
-        path: HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\PendingFileRenameOperations 
-      register: pending_file_rename
+    - name: Send notification with last boot time
+      slack:
+        msg: System last rebooted on {{ last_rebooted }}
+      when: reboot_required.exists
 
     - name: Print last boot time
-      debug:
+      debug: 
         var: last_rebooted
-        
-      when: pending_file_rename.exists
+      when: reboot_required.exists
